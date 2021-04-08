@@ -1,0 +1,19 @@
+version: "3.2"
+services:
+  nodejs:
+    build: 
+      context: .
+    image: amakundu/nodejs-mysql-app
+    networks:
+      - frontend
+      - backend
+    environment:
+      - MYSQL_HOST=moe-mysql-app
+      - MYSQL_USER=moeuser
+      - MYSQL_PASS=moepass
+      - MYSQL_DB=moe_db
+    volumes:
+      - ./www/:/var/www/html/
+    ports:
+      - "30001:8005"
+    container_name: moe-nodejs-app
