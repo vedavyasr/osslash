@@ -26,8 +26,32 @@ module.exports = (sequelize, DataTypes) => {
           key: "id",
         },
       },
+      createdBy: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: "User",
+          key: "id",
+        },
+      },
+      updatedBy: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: "User",
+          key: "id",
+        },
+      },
       deletedAt: DataTypes.DATE,
-      deletedBy: DataTypes.INTEGER,
+      deletedBy: {
+        type: DataTypes.INTEGER,
+        references: {
+          model: "User",
+          key: "id",
+        },
+      },
+      isApproved: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+      },
     },
     {
       sequelize,
@@ -40,6 +64,7 @@ module.exports = (sequelize, DataTypes) => {
           where: {
             deletedAt: null,
             deletedBy: null,
+            isApproved: true
           },
         },
       },

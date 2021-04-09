@@ -17,8 +17,7 @@ module.exports = (sequelize, DataTypes) => {
   }
   User.init(
     {
-      firstName: DataTypes.STRING,
-      lastName: DataTypes.STRING,
+      userName: DataTypes.STRING,
       email: DataTypes.STRING,
       userRoleId: {
         type: DataTypes.INTEGER,
@@ -27,13 +26,13 @@ module.exports = (sequelize, DataTypes) => {
           key: "id",
         },
       },
-      salt: DataTypes.STRING,
     },
     {
       sequelize,
       modelName: "User",
       tableName: "User",
       freezeTableName: true,
+      timestamps: false,
     }
   );
   return User;

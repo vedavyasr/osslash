@@ -8,6 +8,9 @@ const {
 
 // router.use('authentcator')
 
-router.post("/", createOrEditPostValidation, createPost);
+router.put("/", createOrEditPostValidation, createPost);
 router.get("/", listPostsValidation, listPosts);
 router.delete("/", deletePostValidation, deletePost);
+
+
+module.exports=router
