@@ -1,9 +1,15 @@
 FROM node:latest
-WORKDIR /Users/vedavyasr/Documents/oslash
-COPY package*.json ./
+
+RUN mkdir -p /usr/src/app
+
+WORKDIR /usr/src/app
+
+COPY package.json /usr/src/app/
+
 RUN npm install
 
-COPY . .
+COPY . /usr/src/app
 
-EXPOSE 8001
-CMD ["npm", "start"]
+EXPOSE 3001
+
+CMD [ "npm", "start" ]
