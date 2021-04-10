@@ -14,10 +14,10 @@
     "dialect": "mysql"
   },
   "production": {
-    "username": "be650e8f40b4cb",
-    "password": "30e2c19d",
-    "database": "oslashdb",
-    "host": "us-cdbr-east-03.cleardb.com",
+    "username": "process.env.USERNAME",
+    "password": "process.env.PASSWORD",
+    "database": "process.env.DATABASE",
+    "host": "process.env.HOST",
     "dialect": "mysql"
   }
 }
