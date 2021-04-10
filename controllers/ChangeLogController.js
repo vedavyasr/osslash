@@ -5,15 +5,11 @@ class ChangeLogController {
 
   static async recordLog(data, transaction) {
     try {
-      await models.ChangeLog.create(
-        {
-          postId: data.postId,
-          userId: data.userId,
-          action: data.action,
-        },
-        transaction
+      const changeLog = await models.ChangeLog.create(
+        {...data},
+        { transaction: transaction }
       );
-      return true;
+      return changeLog;
     } catch (error) {
       throw error;
     }

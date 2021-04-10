@@ -80,7 +80,7 @@ class PostController {
   static async upsertPost(data, userId, transaction) {
     try {
       let post;
-      const ChangeLogController= require('./ChangeLogController')
+      const ChangeLogController = require("./ChangeLogController");
       if (data.postId) {
         post = await models.Post.findOne({
           where: { id: data.postId },
@@ -89,7 +89,7 @@ class PostController {
         if (!post) {
           throw new Error("Post doesnot exist");
         }
-        post = await models.Post.update(
+        await models.Post.update(
           {
             content: data.content,
             updatedBy: userId,
@@ -101,6 +101,10 @@ class PostController {
             transaction,
           }
         );
+        post = await models.Post.findOne({
+          where: { id: data.postId },
+          transaction,
+        });
       } else {
         post = await models.Post.create(
           { ...data, updatedBy: userId, createdBy: userId },
@@ -109,10 +113,10 @@ class PostController {
       }
       const payload = {
         postId: post.id,
-        action: 'Creating a post',
-        userId: userId
-      }
-      await ChangeLogController.recordLog(payload,transaction)
+        action: "Creating a post",
+        userId: userId,
+      };
+      await ChangeLogController.recordLog(payload, transaction);
       return post;
     } catch (error) {
       throw error;
@@ -122,6 +126,7 @@ class PostController {
    * this method deletes a post of a user
    * @param {object} data
    * @param {number} userId
+   * @param {number} adminId
    * @param {number} postId
    * @param {*} transaction
    */
@@ -132,26 +137,45 @@ class PostController {
         transaction,
       });
       if (!post) {
-        throw new Error("Post doesnot exist");
+        throw new Error("Post does not exist");
       }
-      await models.Post.update(
-        {
-          deletedAt: new Date(),
-          deletedBy: data.userId,
-        },
-        {
-          where: {
-            id: data.postId,
+      if (post.userId !== data.userId) {
+        throw new Error("No Access");
+      }
+      if (data.adminId) {
+        let approvalPayload = {
+          actionNotes: "Delete",
+          status: "Requested",
+          postId: data.postId,
+          requestedBy: data.adminId,
+        };
+        
+        await ApprovalController.createApprovalRequest(
+          approvalPayload,
+          transaction
+        );
+      } else {
+        await models.Post.update(
+          {
+            deletedAt: new Date(),
+            deletedBy: data.userId,
           },
-          transaction,
-        }
-      );
-      const payload = {
-        postId: data.postId,
-        action: 'Deleting a post',
-        userId: data.userId
+          {
+            where: {
+              id: data.postId,
+            },
+            transaction,
+          }
+        );
+        const payload = {
+          postId: data.postId,
+          action: "Deleting a post",
+          userId: data.userId,
+        };
+        const ChangeLogController = require("./ChangeLogController");
+
+        await ChangeLogController.recordLog(payload, transaction);
       }
-      await ChangeLogController.recordLog(payload,transaction)
       return true;
     } catch (error) {
       throw error;

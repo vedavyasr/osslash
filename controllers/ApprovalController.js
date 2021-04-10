@@ -1,4 +1,5 @@
 const models = require("../models");
+const PostController = require("./PostController");
 
 class ApprovalController {
   constructor() {}
@@ -17,16 +18,20 @@ class ApprovalController {
       transaction || (await models.sequelize.transaction());
     const ChangeLogController = require("./ChangeLogController");
     try {
-      await models.Approval.create(data, { transaction: inputTransaction });
+      await models.Approval.create(
+        { ...data },
+        { transaction: inputTransaction }
+      );
       const payload = {
         postId: data.postId,
-        action: "approving a post",
+        actionNotes: "approving a post",
         userId: data.approvedBy,
       };
       await ChangeLogController.recordLog(payload, inputTransaction);
+      if (!transaction) await inputTransaction.commit();
       return true;
     } catch (error) {
-      if (!transaction) await models.sequelize.rollback();
+      if (!transaction) await inputTransaction.rollback();
       throw error;
     }
   }
@@ -68,22 +73,31 @@ class ApprovalController {
       if (!user || user.userRoleId !== 3) {
         throw new Error("Not a valid admin");
       }
-      request = await models.Approval.update(
-        {
-          ...request,
-          approvedBy: data.userId,
-          status: data.status,
-          actionNotes: "Accepted",
-        },
-        {
-          where: {
-            id: data.requestId,
-          },
-          returning: true,
-          plain: true,
-          transaction,
-        }
-      );
+      if (request.actionNotes === "Delete") {
+        const approvedRequest = await models.sequelize.query(
+          `update Approval set approvedBy=${data.userId},status='${
+            data.status
+          }',actionNotes='${"Accepted"}'
+        where id=${data.requestId}
+        `,
+          { type: models.sequelize.QueryTypes.UPDATE, transaction }
+        );
+        const postController = new PostController();
+        await postController.deletePost(
+          { postId: data.postId, userId: data.adminId },
+          transaction
+        );
+      } else {
+        await models.sequelize.query(
+          `update Approval set approvedBy=${data.userId},status='${
+            data.status
+          }',actionNotes='${"Accepted"}'
+        where id=${data.requestId}
+        `,
+          { type: models.sequelize.QueryTypes.UPDATE, transaction }
+        );
+      }
+
       const approvalRecord = await models.Approval.findOne(
         { where: { id: data.requestId } },
         transaction
@@ -92,12 +106,12 @@ class ApprovalController {
         where: { id: approvalRecord.postId },
         transaction,
       });
-      const PostController = require("./PostController");
 
-      await PostController.upsertPost(
-        { ...post, postId: post.id, isApproved: true },
-        post.updatedBy,
-        transaction
+      await models.sequelize.query(
+        `update Post set isApproved=true
+      where id=${post.id}
+      `,
+        { type: models.sequelize.QueryTypes.UPDATE, transaction }
       );
       return true;
     } catch (error) {

@@ -39,6 +39,9 @@ async function createOrEditPostValidation(req, res, next) {
 async function deletePostValidation(req, res, next) {
   const schema = Joi.object().keys({
     userId: Joi.number().error(new Error("userId must be an integer")),
+    adminId: Joi.number()
+      .allow(null)
+      .error(new Error("adminId must be an integer")),
     postId: Joi.number()
       .required()
       .error(new Error("postId must be an integer")),
