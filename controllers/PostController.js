@@ -139,7 +139,7 @@ class PostController {
       if (!post) {
         throw new Error("Post does not exist");
       }
-      if (post.userId !== data.userId) {
+      if (post.userId !== Number(data.userId)) {
         throw new Error("No Access");
       }
       if (data.adminId) {
